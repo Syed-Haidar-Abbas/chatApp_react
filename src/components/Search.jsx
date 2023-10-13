@@ -1,3 +1,4 @@
+// Importing necessary modules and components
 import React, { useContext, useState } from "react";
 import {
   collection,
@@ -12,13 +13,18 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { AuthContext } from "../context/AuthContext";
+
+// Defining a functional component named 'Search'
 const Search = () => {
+  // State variables for username input, selected user, and error flag
   const [username, setUsername] = useState("");
   const [user, setUser] = useState(null);
   const [err, setErr] = useState(false);
 
+  // Accessing current user from AuthContext
   const { currentUser } = useContext(AuthContext);
 
+  // Function to handle user search
   const handleSearch = async () => {
     const q = query(
       collection(db, "users"),
@@ -35,12 +41,14 @@ const Search = () => {
     }
   };
 
+  // Function to handle Enter key press
   const handleKey = (e) => {
     e.code === "Enter" && handleSearch();
   };
 
+  // Function to handle user selection
   const handleSelect = async () => {
-    //check whether the group(chats in firestore) exists, if not create
+    // Check whether the group (chats in firestore) exists, if not create
     const combinedId =
       currentUser.uid > user.uid
         ? currentUser.uid + user.uid
@@ -49,10 +57,10 @@ const Search = () => {
       const res = await getDoc(doc(db, "chats", combinedId));
 
       if (!res.exists()) {
-        //create a chat in chats collection
+        // Create a chat in chats collection
         await setDoc(doc(db, "chats", combinedId), { messages: [] });
 
-        //create user chats
+        // Create user chats
         await updateDoc(doc(db, "userChats", currentUser.uid), {
           [combinedId + ".userInfo"]: {
             uid: user.uid,
@@ -73,9 +81,12 @@ const Search = () => {
       }
     } catch (err) {}
 
+    // Reset state variables
     setUser(null);
-    setUsername("")
+    setUsername("");
   };
+
+  // JSX markup for rendering the component
   return (
     <div className="search">
       <div className="searchForm">
@@ -100,4 +111,5 @@ const Search = () => {
   );
 };
 
+// Exporting the 'Search' component as the default export
 export default Search;

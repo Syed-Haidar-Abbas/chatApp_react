@@ -1,3 +1,4 @@
+// Importing necessary modules and components
 import React, { useContext, useState } from "react";
 import Img from "../img/img.png";
 import Attach from "../img/attach.png";
@@ -14,25 +15,31 @@ import { db, storage } from "../firebase";
 import { v4 as uuid } from "uuid";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 
+// Defining a functional component named 'Input'
 const Input = () => {
+  // State variables for text input and selected image
   const [text, setText] = useState("");
   const [img, setImg] = useState(null);
 
+  // Accessing current user and chat data from AuthContext and ChatContext
   const { currentUser } = useContext(AuthContext);
   const { data } = useContext(ChatContext);
 
+  // Function to handle sending messages
   const handleSend = async () => {
     if (img) {
+      // Uploading image to Firebase storage
       const storageRef = ref(storage, uuid());
-
       const uploadTask = uploadBytesResumable(storageRef, img);
 
       uploadTask.on(
         (error) => {
-          //TODO:Handle Error
+          // TODO: Handle Error
         },
         () => {
+          // Getting download URL of the uploaded image
           getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
+            // Updating chat messages with image URL
             await updateDoc(doc(db, "chats", data.chatId), {
               messages: arrayUnion({
                 id: uuid(),
@@ -46,6 +53,7 @@ const Input = () => {
         }
       );
     } else {
+      // Updating chat messages with text message
       await updateDoc(doc(db, "chats", data.chatId), {
         messages: arrayUnion({
           id: uuid(),
@@ -56,6 +64,7 @@ const Input = () => {
       });
     }
 
+    // Updating last message and date in userChats for both users
     await updateDoc(doc(db, "userChats", currentUser.uid), {
       [data.chatId + ".lastMessage"]: {
         text,
@@ -70,9 +79,12 @@ const Input = () => {
       [data.chatId + ".date"]: serverTimestamp(),
     });
 
+    // Resetting text input and selected image
     setText("");
     setImg(null);
   };
+
+  // JSX markup for rendering the component
   return (
     <div className="input">
       <input
@@ -98,4 +110,5 @@ const Input = () => {
   );
 };
 
+// Exporting the 'Input' component as the default export
 export default Input;
